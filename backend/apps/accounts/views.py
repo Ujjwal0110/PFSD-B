@@ -92,46 +92,51 @@ class RegisterView(APIView):
 # POST /api/login/
 # ─────────────────────────────────────────────────────────────────────────────
 class LoginView(APIView):
-    """
-    Authenticate a user and return JWT tokens.
-    Accepts: username, password
-    Returns: user object + JWT tokens
-    """
     permission_classes = [AllowAny]
 
     def post(self, request):
         try:
-            serializer = LoginSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            login_input = request.data.get("username") or request.data.get("email")
+            password = request.data.get("password")
 
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(request, username=username, password=password)
+            if not login_input or not password:
+                return Response(
+                    {"error": "Email/Username and password required."},
+                    status=400
+                )
+
+            # Try username
+            user = authenticate(request, username=login_input, password=password)
+
+            # If not found, try email lookup
+            if user is None:
+                try:
+                    found_user = User.objects.get(email__iexact=login_input)
+                    user = authenticate(
+                        request,
+                        username=found_user.username,
+                        password=password
+                    )
+                except User.DoesNotExist:
+                    pass
 
             if user is None:
-                return Response(
-                    {'error': 'Invalid credentials. Please check your username and password.'},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
+                return Response({"error": "Invalid credentials"}, status=401)
 
             if not user.is_active:
-                return Response(
-                    {'error': 'Your account is inactive. Please verify your email or contact support.'},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
+                return Response({"error": "Account inactive"}, status=403)
 
             tokens = get_tokens_for_user(user, request)
-            return Response({
-                'user':    UserSerializer(user, context={'request': request}).data,
-                'tokens':  tokens,
-                'access':  tokens['access'],
-                'refresh': tokens['refresh'],
-                'message': 'Login successful.',
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': f"Login failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+            return Response({
+                "user": UserSerializer(user, context={'request': request}).data,
+                "tokens": tokens,
+                "access": tokens["access"],
+                "refresh": tokens["refresh"]
+            })
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GET /api/me/
