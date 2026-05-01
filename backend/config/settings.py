@@ -96,8 +96,10 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
             'sslmode': 'require',
+            'connect_timeout': 30,
         },
-        'CONN_MAX_AGE': 60,
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
