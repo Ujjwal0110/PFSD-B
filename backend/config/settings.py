@@ -18,7 +18,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,pfsd-b.onrender.com"
+    "localhost,127.0.0.1,pfsd-b.onrender.com,.onrender.com,.vercel.app"
 ).split(",")
 
 # ─────────────────────────────────────────────
@@ -49,8 +49,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-
-    # WhiteNoise for static files
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -131,8 +129,7 @@ USE_TZ = True
 # ─────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -143,10 +140,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS
 # ─────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
-    "https://pfsd-frontend-njvruylvs-ujjwals-projects-4dddf794.vercel.app",
+    "https://pfsd-frontend.vercel.app",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# ─────────────────────────────────────────────
+# CSRF
+# ─────────────────────────────────────────────
+CSRF_TRUSTED_ORIGINS = [
+    "https://pfsd-frontend.vercel.app",
+    "https://*.vercel.app",
+]
 
 # ─────────────────────────────────────────────
 # REST FRAMEWORK
@@ -156,7 +165,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
