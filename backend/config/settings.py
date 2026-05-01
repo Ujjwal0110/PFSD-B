@@ -126,7 +126,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ─────────────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
    
-   https://pfsd-frontend-njvruylvs-ujjwals-projects-4dddf794.vercel.app,
+   'https://pfsd-frontend-njvruylvs-ujjwals-projects-4dddf794.vercel.app',
 ]
 CORS_ALLOW_CREDENTIALS = True
 
